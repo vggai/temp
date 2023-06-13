@@ -1,0 +1,53 @@
+import boto3
+from reportlab.pdfgen import canvas
+
+def create_pdf(file_path):
+    c = canvas.Canvas(file_path)
+    c.drawString(100, 750, "Hello, this is a PDF file.")
+    c.save()
+
+def send_email_with_attachment(file_path, recipient_email, sender_email, subject, body):
+    ses_client = boto3.client('ses')
+
+    with open(file_path, 'rb') as file:
+        file_data = file.read()
+
+    response = ses_client.send_raw_email(
+        Source=sender_email,
+        Destinations=[recipient_email],
+        RawMessage={
+            'Data': create_mime_message(sender_email, recipient_email, subject, body, file_data)
+        }
+    )
+
+    print('Email sent! Message ID:', response['MessageId'])
+
+def create_mime_message(sender_email, recipient_email, subject, body, file_data):
+    import email.utils
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.application import MIMEApplication
+
+    msg = MIMEMultipart()
+    msg['Subject'] = subject
+    msg['From'] = email.utils.formataddr(('Sender Name', sender_email))
+    msg['To'] = recipient_email
+
+    body_text = MIMEText(body)
+    msg.attach(body_text)
+
+    attachment = MIMEApplication(file_data)
+    attachment.add_header('Content-Disposition', 'attachment', filename='attachment.pdf')
+    msg.attach(attachment)
+
+    return msg.as_string()
+
+def lambda_handler(event, context):
+    file_path = '/tmp/attachment.pdf'
+    recipient_email = 'recipient@example.com'
+    sender_email = 'sender@example.com'
+    subject = 'Email Subject'
+    body = 'Hello, this is the body of the email.'
+
+    create_pdf(file_path)
+    send_email_with_attachment(file_path, recipient_email, sender_email, subject, body)
