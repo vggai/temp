@@ -1,1 +1,15 @@
 
+DECLARE @Today DATETIME = GETDATE(); -- Get the current date and time
+
+IF NOT EXISTS (SELECT 1 FROM NotificationHistory WHERE CONVERT(DATE, detectiondatetime) = CONVERT(DATE, @Today))
+BEGIN
+    -- Insert a new row for today's date
+    INSERT INTO NotificationHistory (detectiondatetime, detectioncount, notificationdatetime, notificationcount)
+    VALUES (@Today, 0, NULL, 0);
+    
+    SELECT 1 AS Result; -- Return true if a new row was inserted
+END
+ELSE
+BEGIN
+    SELECT 0 AS Result; -- Return false if the row for today's date already exists
+END
