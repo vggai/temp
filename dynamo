@@ -1,0 +1,28 @@
+@Configuration
+public class DynamoDBConfig {
+
+    @Value("${aws.dynamodb.endpoint}")
+    private String dynamoDbEndpoint;
+
+    @Value("${aws.region}")
+    private String awsRegion;
+
+    @Value("${aws.accessKeyId}")
+    private String awsAccessKey;
+
+    @Value("${aws.secretKey}")
+    private String awsSecretKey;
+
+    @Bean
+    public AmazonDynamoDB amazonDynamoDB() {
+        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(dynamoDbEndpoint, awsRegion))
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey)));
+        return builder.build();
+    }
+}
+
+
+
+
+
