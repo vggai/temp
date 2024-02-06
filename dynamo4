@@ -1,0 +1,31 @@
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+import java.time.Instant;
+
+public class TokenService {
+
+    private final DynamoDbClient dynamoDbClient;
+    private static final String TABLE_NAME = "UserTokens";
+
+    // Constructor...
+
+    public void upsertToken(String userId, String accessToken, int remainingTimeInSeconds) {
+        long expiryTime = Instant.now().getEpochSecond() + remainingTimeInSeconds;
+
+        Map<String, AttributeValue> item = new HashMap<>();
+        item.put("userId", AttributeValue.builder().s(userId).build());
+        item.put("accessToken", AttributeValue.builder().s(accessToken).build());
+        item.put("expiryTime", AttributeValue.builder().n(String.valueOf(expiryTime)).build());
+
+        PutItemRequest request = PutItemRequest.builder()
+                .tableName(TABLE_NAME)
+                .item(item)
+                .build();
+
+        try {
+            dynamoDbClient.putItem(request);
+        } catch (DynamoDbException e) {
+            // Log and handle the exception
+        }
+    }
+}
