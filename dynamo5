@@ -1,0 +1,26 @@
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+
+public class TestDynamoDBConnection {
+
+    public static void main(String[] args) {
+        String tableName = "YourTableName"; // Replace with your table name
+        DynamoDbClient dynamoDbClient = DynamoDBUtil.createDynamoDbClient();
+
+        try {
+            DescribeTableRequest request = DescribeTableRequest.builder()
+                .tableName(tableName)
+                .build();
+
+            DescribeTableResponse response = dynamoDbClient.describeTable(request);
+            System.out.println("Table Description: " + response.table().toString());
+        } catch (DynamoDbException e) {
+            System.err.println("Unable to describe table: " + e.getMessage());
+            // Additional error handling if needed
+        } finally {
+            dynamoDbClient.close();
+        }
+    }
+}
