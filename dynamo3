@@ -1,0 +1,47 @@
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+
+import java.net.URI;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
+public class TokenService {
+
+    private final DynamoDbClient dynamoDbClient;
+
+    public TokenService() {
+        this.dynamoDbClient = DynamoDbClient.builder()
+                .endpointOverride(URI.create("http://localhost:8000")) // For local DynamoDB
+                .region(Region.of("us-west-2")) // Specify your region
+                .build();
+    }
+
+    public boolean isTokenValid(String token) {
+        Map<String, Object> keyToGet = new HashMap<>();
+        keyToGet.put("token", token);
+
+        GetItemRequest request = GetItemRequest.builder()
+                .key(keyToGet)
+                .tableName("AuthTokenTable")
+                .build();
+
+        try {
+            GetItemResponse response = dynamoDbClient.getItem(request);
+            if (response.item() == null || response.item().isEmpty()) {
+                return false;
+            }
+
+            long expiryTime = (Long) response.item().get("expiryTime");
+            return Instant.now().getEpochSecond() < expiryTime;
+        } catch (DynamoDbException e) {
+            // Log and handle the exception
+            return false;
+        }
+    }
+
+    // Other methods can be added here
+}
