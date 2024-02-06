@@ -1,0 +1,78 @@
+Certainly! Following the pattern of the upsert code I previously provided, I will write two functions for your `TokenService` class: `getTokenByUserId` to retrieve a token from the DynamoDB table based on a `userId`, and `isValidToken` to validate the token with its expiry time.
+
+### Step 1: Method to Retrieve Token by UserId
+
+This method fetches the access token and its expiry time from DynamoDB based on the given `userId`.
+
+```java
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+import java.util.Optional;
+
+public class TokenService {
+
+    private final DynamoDbClient dynamoDbClient;
+
+    public TokenService(DynamoDbClient dynamoDbClient) {
+        this.dynamoDbClient = dynamoDbClient;
+    }
+
+    public Optional<Map<String, AttributeValue>> getTokenByUserId(String userId) {
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName("UserTokens")
+                .key(Key.builder().put("userId", AttributeValue.builder().s(userId).build()).build())
+                .build();
+
+        try {
+            GetItemResponse response = dynamoDbClient.getItem(request);
+            if (response.hasItem()) {
+                return Optional.of(response.item());
+            }
+        } catch (DynamoDbException e) {
+            // Log and handle the exception
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+}
+```
+
+### Step 2: Method to Validate the Token
+
+This method validates the token by checking if it exists and whether it's expired.
+
+```java
+import java.time.Instant;
+import java.util.Map;
+
+public class TokenService {
+
+    // ... Existing code ...
+
+    public boolean isValidToken(String userId, String accessToken) {
+        Optional<Map<String, AttributeValue>> optionalItem = getTokenByUserId(userId);
+        
+        if (optionalItem.isPresent()) {
+            Map<String, AttributeValue> item = optionalItem.get();
+            String storedAccessToken = item.get("accessToken").s();
+            long expiryTime = Long.parseLong(item.get("expiryTime").n());
+
+            return accessToken.equals(storedAccessToken) && Instant.now().getEpochSecond() < expiryTime;
+        }
+        return false;
+    }
+}
+```
+
+### Explanation
+
+- `getTokenByUserId` retrieves the token item from DynamoDB and returns it as a `Map<String, AttributeValue>`. If the token does not exist, it returns an empty `Optional`.
+- `isValidToken` first retrieves the token item. If it's present, it checks if the provided `accessToken` matches the one in the database and if the current time is before the `expiryTime`.
+- If both conditions are met, the token is considered valid.
+
+### Notes
+
+- Make sure your table name and attribute names (`userId`, `accessToken`, `expiryTime`) match your DynamoDB table's schema.
+- Ensure the AWS credentials and configuration are set up correctly.
+- The methods use `Optional` to handle the absence of values cleanly.
+- Proper error handling and logging should be implemented for production code.
