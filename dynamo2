@@ -1,0 +1,77 @@
+To test whether your Spring Boot application has successfully established a connection with DynamoDB Local, you can perform a simple operation like creating a table, listing tables, or putting and retrieving an item. Here’s a step-by-step guide to do this:
+
+### 1. Create a DynamoDB Table
+
+First, define a method in your configuration or service class to create a table. This method will attempt to create a new table in DynamoDB Local.
+
+```java
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.model.*;
+
+// ... other imports
+
+public class DynamoDBService {
+
+    @Autowired
+    private AmazonDynamoDB amazonDynamoDB;
+
+    public void createTable() {
+        CreateTableRequest request = new CreateTableRequest()
+            .withTableName("TestTable")
+            .withKeySchema(new KeySchemaElement("id", KeyType.HASH))
+            .withAttributeDefinitions(new AttributeDefinition("id", ScalarAttributeType.S))
+            .withProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
+
+        amazonDynamoDB.createTable(request);
+    }
+}
+```
+
+### 2. Invoke the Method on Application Start
+
+You can invoke this method when your application starts. This can be done in your main application class or any initialization class.
+
+```java
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DynamoDBInitializer implements CommandLineRunner {
+
+    private final DynamoDBService dynamoDBService;
+
+    public DynamoDBInitializer(DynamoDBService dynamoDBService) {
+        this.dynamoDBService = dynamoDBService;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        dynamoDBService.createTable();
+        System.out.println("Table created successfully!");
+    }
+}
+```
+
+### 3. Handle Exceptions
+
+Ensure you handle exceptions properly. If the connection fails or there are issues with your request, AWS SDK will throw an exception.
+
+```java
+try {
+    dynamoDBService.createTable();
+    System.out.println("Table created successfully!");
+} catch (AmazonDynamoDBException e) {
+    System.err.println("Error creating table: " + e.getMessage());
+    // Handle exception
+}
+```
+
+### 4. Run Your Application
+
+Run your Spring Boot application. If the table creation is successful and you see "Table created successfully!" in the console, it means the connection to DynamoDB Local is established and working.
+
+### 5. Clean Up
+
+Remember to delete the test table or modify your code after your test, especially if you plan to deploy this application in a production environment.
+
+By following these steps, you can effectively test the connection between your Spring Boot application and DynamoDB Local. If there are any issues, the exception message should give you more information about what went wrong.
