@@ -1,0 +1,39 @@
+Here are the expanded tables including more scenarios apart from stopping at a stop sign, providing a comprehensive view of how data from various sensors might be structured and utilized in a machine learning context for a system like Tesla Autopilot:
+
+### Expanded Camera Feed Data
+
+| Timestamp           | Frame_ID | Camera_ID | Description                           | Environmental_Conditions | File_Path       |
+|---------------------|----------|-----------|---------------------------------------|--------------------------|-----------------|
+| 2024-02-15 08:00:00 | 1        | Front     | Vehicle approaches stop sign          | Sunny, Dry Road          | frame_00001.jpg |
+| 2024-02-15 08:00:01 | 2        | Front     | Vehicle stops at stop sign            | Sunny, Dry Road          | frame_00002.jpg |
+| 2024-02-15 08:05:00 | 3        | Rear      | Vehicle detects object while reversing| Cloudy, Wet Road         | frame_00003.jpg |
+| 2024-02-15 08:05:01 | 4        | Rear      | Vehicle stops before collision        | Cloudy, Wet Road         | frame_00004.jpg |
+
+### Expanded Radar Sensor Data
+
+| Timestamp           | Object_ID | Distance_m | Velocity_m/s | Acceleration_m/s2 | Object_Type | Angle_degrees |
+|---------------------|-----------|------------|--------------|-------------------|-------------|---------------|
+| 2024-02-15 08:00:00 | 1         | 50         | -2           | 0                 | Car         | 0             |
+| 2024-02-15 08:00:01 | 2         | 48         | 0            | 0                 | Car         | 0             |
+| 2024-02-15 08:05:00 | 3         | 2          | -1           | 0                 | Bicycle     | 180           |
+| 2024-02-15 08:05:01 | 4         | 1          | 0            | 0                 | Bicycle     | 180           |
+
+### Expanded Ultrasonic Sensor Data
+
+| Timestamp           | Sensor_ID    | Distance_cm | Object_Detected |
+|---------------------|--------------|-------------|-----------------|
+| 2024-02-15 08:00:00 | Front_Center | 200         | Curb            |
+| 2024-02-15 08:00:01 | Front_Center | 150         | Curb            |
+| 2024-02-15 08:05:00 | Rear_Center  | 50          | Bicycle         |
+| 2024-02-15 08:05:01 | Rear_Center  | 30          | Bicycle         |
+
+### Expanded GPS and Map Data
+
+| Timestamp           | Latitude  | Longitude   | Speed_km/h | Heading | Location_Description          |
+|---------------------|-----------|-------------|------------|---------|-------------------------------|
+| 2024-02-15 08:00:00 | 37.421999 | -122.084057 | 30         | North   | Approaching stop sign         |
+| 2024-02-15 08:00:01 | 37.422000 | -122.084058 | 0          | North   | At stop sign                  |
+| 2024-02-15 08:05:00 | 37.422100 | -122.084150 | 10         | South   | Reversing in parking lot      |
+| 2024-02-15 08:05:01 | 37.422101 | -122.084151 | 0          | South   | Stopped before hitting an object |
+
+These tables illustrate a more detailed scenario where the vehicle interacts with various elements in its environment, demonstrating the complexity of data collection and integration for autonomous driving applications. Each piece of data provides critical information for training machine learning models to understand and navigate real-world driving scenarios safely.
