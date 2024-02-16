@@ -1,0 +1,41 @@
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+const s3Client = new S3Client({ region: "your-region" }); // Replace "your-region" with the actual region of your S3 bucket
+
+exports.handler = async (event) => {
+    const bucketName = 'vd-ghegs-hdhd';
+    const objectKey = 'data-store/sample_names.csv';
+    
+    const getObjectParams = {
+        Bucket: bucketName,
+        Key: objectKey,
+    };
+    
+    try {
+        // Create a command to get the object
+        const command = new GetObjectCommand(getObjectParams);
+        
+        // Send the command to S3
+        const response = await s3Client.send(command);
+        
+        // Stream the file content and convert it to a string
+        let fileContent = '';
+        response.Body.on('data', (chunk) => fileContent += chunk);
+        await new Promise((resolve, reject) => {
+            response.Body.once('end', resolve);
+            response.Body.once('error', reject);
+        });
+        
+        console.log("File content:", fileContent);
+        
+        // Optionally, return the file content or any other information
+        return {
+            statusCode: 200,
+            body: fileContent,
+        };
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
+};
