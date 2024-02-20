@@ -1,0 +1,19 @@
+@RestController
+@RequestMapping("/api")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @DeleteMapping("/deleteFcmToken")
+    public ResponseEntity<?> deleteFcmToken(@RequestParam String userId, @RequestParam String fcmToken) {
+        try {
+            userService.deleteFcmToken(userId, fcmToken);
+            return ResponseEntity.ok().body("FCM token removed successfully.");
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (TokenNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+}
