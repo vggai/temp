@@ -1,0 +1,104 @@
+To create an `updateFcmToken` API in a Spring Boot application that uses Spring Data DynamoDB, you'll need to follow several steps. This example assumes you are familiar with Spring Boot and have a basic DynamoDB setup ready.
+
+### 1. Add Spring Data DynamoDB Dependency
+
+First, ensure you have the `spring-data-dynamodb` dependency in your `pom.xml` or `build.gradle` file. Here's an example for `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.github.derjust</groupId>
+    <artifactId>spring-data-dynamodb</artifactId>
+    <version>5.1.0</version>
+</dependency>
+```
+
+Adjust the version as needed based on the latest releases.
+
+### 2. Configure DynamoDB
+
+Ensure you have your DynamoDB configured in your `application.properties` or `application.yml`. You'll need to specify your AWS credentials and DynamoDB endpoint.
+
+### 3. Define the User Entity
+
+Create a `User` entity class that maps to your DynamoDB table. This class should include a list of FCM tokens.
+
+```java
+@DynamoDBTable(tableName = "User")
+public class User {
+    private String userId;
+    private List<String> fcmTokens;
+
+    @DynamoDBHashKey(attributeName = "userId")
+    public String getUserId() {
+        return userId;
+    }
+
+    // Setters and Getters
+
+    @DynamoDBAttribute(attributeName = "fcmTokens")
+    public List<String> getFcmTokens() {
+        return fcmTokens;
+    }
+
+    // Setters and Getters
+}
+```
+
+### 4. Create a UserRepository Interface
+
+Define a repository interface for your `User` entity by extending `CrudRepository` or `DynamoDBCrudRepository`.
+
+```java
+public interface UserRepository extends CrudRepository<User, String> {
+}
+```
+
+### 5. Implement the UpdateFcmToken Service
+
+Create a service class that contains the logic to update the FCM token.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public void updateFcmToken(String userId, String fcmToken) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        userOptional.ifPresent(user -> {
+            List<String> fcmTokens = user.getFcmTokens();
+            if (fcmTokens == null) {
+                fcmTokens = new ArrayList<>();
+            }
+            fcmTokens.add(fcmToken);
+            user.setFcmTokens(fcmTokens);
+            userRepository.save(user);
+        });
+    }
+}
+```
+
+### 6. Create the Controller
+
+Finally, create a REST controller to expose the `updateFcmToken` functionality via an API endpoint.
+
+```java
+@RestController
+@RequestMapping("/api")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/updateFcmToken")
+    public ResponseEntity<?> updateFcmToken(@RequestParam String userId, @RequestParam String fcmToken) {
+        userService.updateFcmToken(userId, fcmToken);
+        return ResponseEntity.ok().build();
+    }
+}
+```
+
+### Summary
+
+With these components, your Spring Boot application can now accept a `userId` and a `fcmToken` through the `/api/updateFcmToken` endpoint. If the user exists, it appends the FCM token to the user's `fcmTokens` list in DynamoDB. Make sure to handle any exceptions or edge cases, such as user not found or DynamoDB connection issues, according to your application's requirements.
