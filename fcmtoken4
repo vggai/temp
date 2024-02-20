@@ -1,3 +1,49 @@
+To modify the service method to throw an exception when the specified FCM token is not found for the user, you can introduce a custom exception, such as `TokenNotFoundException`. Here's how you can adjust the implementation to include this behavior:
+
+### 1. Define TokenNotFoundException
+
+First, define a custom exception class for the scenario where the FCM token is not found.
+
+```java
+public class TokenNotFoundException extends RuntimeException {
+    public TokenNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+### 2. Update UserService
+
+Modify the `deleteFcmToken` method in `UserService` to throw the `TokenNotFoundException` if the FCM token does not exist in the user's list.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public void deleteFcmToken(String userId, String fcmToken) throws UserNotFoundException, TokenNotFoundException {
+        Optional<User> userOptional = userRepository.findByUserId(userId);
+        if (!userOptional.isPresent()) {
+            throw new UserNotFoundException("User with ID " + userId + " not found");
+        }
+
+        User user = userOptional.get();
+        List<String> fcmTokens = user.getFcmTokens();
+        if (fcmTokens == null || !fcmTokens.remove(fcmToken)) {
+            throw new TokenNotFoundException("FCM token not found for the user.");
+        }
+        userRepository.save(user);
+    }
+}
+```
+
+### 3. Adjust the Controller Method
+
+Ensure your controller method handles both `UserNotFoundException` and `TokenNotFoundException`, returning appropriate HTTP responses for each case.
+
+```java
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -17,3 +63,8 @@ public class UserController {
         }
     }
 }
+```
+
+### 4. Global Exception Handling (Optional)
+
+If you are using `@RestControllerAdvice` or `@ControllerAdvice` for global exception handling, you can add handlers for `UserNotFoundException` and `TokenNotFoundException` to centralize
