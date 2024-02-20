@@ -1,0 +1,85 @@
+Correct, in a well-structured Spring Boot application, interactions with the database should be encapsulated within the service layer, not directly within the controller layer. This separation of concerns allows for cleaner, more maintainable code and makes it easier to unit test each component.
+
+The controller layer should handle HTTP requests and delegate business logic and database interactions to the service layer. The service layer then interacts with the repository layer to perform data access operations. This approach also makes it easier to implement additional business logic or validation within the service layer without cluttering the controller.
+
+Here's how the structure looks after adjusting for your feedback:
+
+### UserController
+
+The `UserController` class focuses on handling HTTP requests and responses. It calls the service layer for the business logic and database interactions:
+
+```java
+@RestController
+@RequestMapping("/api")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/fetchFcmTokens")
+    public ResponseEntity<?> fetchFcmTokensByUserId(@RequestParam String userId) {
+        try {
+            List<String> fcmTokens = userService.fetchFcmTokensByUserId(userId);
+            return ResponseEntity.ok(fcmTokens);
+        } catch (UserNotFoundException ex) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            errorResponse.put("status", "404");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+}
+```
+
+### UserService
+
+The `UserService` class is responsible for the business logic and interacts with the database through the repository. It's also where you handle the case of a user not being found:
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public List<String> fetchFcmTokensByUserId(String userId) throws UserNotFoundException {
+        Optional<User> userOptional = userRepository.findByUserId(userId);
+        if (!userOptional.isPresent()) {
+            throw new UserNotFoundException("User with ID " + userId + " not found");
+        }
+        return userOptional.get().getFcmTokens();
+    }
+}
+```
+
+### UserNotFoundException
+
+You might define a custom exception, `UserNotFoundException`, to handle scenarios where a user is not found:
+
+```java
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+### Exception Handling with @RestControllerAdvice
+
+For a more centralized approach to exception handling, consider using `@RestControllerAdvice` or `@ControllerAdvice` to handle exceptions like `UserNotFoundException`:
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFoundException(UserNotFoundException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        errorResponse.put("status", "404");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+}
+```
+
+With this setup, the controller remains lean and focused on handling HTTP requests and responses, while the service layer manages the business logic and database interactions. The `@RestControllerAdvice` provides a centralized way to handle exceptions, making the code cleaner and more maintainable.
