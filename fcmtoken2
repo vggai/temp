@@ -1,0 +1,58 @@
+In the code snippet you provided, `userId` and `fcmToken` are expected as request parameters, not in the JSON request body. This means that they should be included in the query string of the URL or as form data in the POST request, not in the JSON body.
+
+If you intend to receive `userId` and `fcmToken` as part of the JSON request body, you would need to modify the method to accept a JSON object. Here's how you can adjust your controller to use a JSON payload instead:
+
+1. **Create a Request DTO**: First, define a class that will serve as the data transfer object (DTO) for the incoming JSON payload.
+
+```java
+public class UpdateFcmTokenRequest {
+    private String userId;
+    private String fcmToken;
+
+    // Getters and setters
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+}
+```
+
+2. **Modify the Controller Method**: Use the `@RequestBody` annotation to indicate that the method should expect the request parameters in the JSON body of the request.
+
+```java
+@PostMapping("/updateFcmToken")
+public ResponseEntity<?> updateFcmToken(@RequestBody UpdateFcmTokenRequest request) {
+    userService.updateFcmToken(request.getUserId(), request.getFcmToken());
+    return ResponseEntity.ok().build();
+}
+```
+
+After making these changes, the `userId` and `fcmToken` are expected to be part of the JSON request body. Here is an example of how the JSON request body should look:
+
+```json
+{
+  "userId": "exampleUserId",
+  "fcmToken": "exampleFcmToken"
+}
+```
+
+And the request can be made using tools like Postman or cURL as follows (assuming your API is running locally on port 8080):
+
+```bash
+curl -X POST http://localhost:8080/api/updateFcmToken \
+     -H "Content-Type: application/json" \
+     -d '{"userId": "exampleUserId", "fcmToken": "exampleFcmToken"}'
+```
+
+This way, the controller method correctly processes the JSON request body to update the FCM token for the given user ID.
