@@ -1,0 +1,1 @@
+aws cloudwatch put-dashboard --dashboard-name "NewDashboardName" --dashboard-body "$(aws cloudwatch get-dashboard --dashboard-name "ExistingDashboardName" | jq -r '.DashboardBody')"
