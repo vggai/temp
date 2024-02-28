@@ -1,0 +1,113 @@
+If you want to use two different object types for success and failure responses in your API, you would typically define two separate classes tailored to the structure and data you wish to include in each type of response. This approach allows you to clearly differentiate between successful outcomes and errors, potentially including different fields in each response type.
+
+For instance, a success response might include details relevant to the validation, such as a message, token details, or user information, while an error response might include an error message and a code.
+
+Here’s an example of how you might define and use these classes:
+
+### SuccessResponse Class
+
+This class can be used for successful responses, possibly including more information than just a message.
+
+```java
+public class SuccessResponse {
+    private String message;
+    private String token;
+    // Additional fields as needed
+
+    public SuccessResponse(String message, String token) {
+        this.message = message;
+        this.token = token;
+    }
+
+    // Getters and setters
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+}
+```
+
+### ErrorResponse Class
+
+This class is for error responses, which might include an error message and an error code.
+
+```java
+public class ErrorResponse {
+    private String errorMessage;
+    private int errorCode;
+
+    public ErrorResponse(String errorMessage, int errorCode) {
+        this.errorMessage = errorMessage;
+        this.errorCode = errorCode;
+    }
+
+    // Getters and setters
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+    }
+}
+```
+
+### Controller Method Example
+
+You can then modify your controller to return the appropriate object type based on the outcome of the token validation.
+
+```java
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class TokenValidationController {
+
+    @GetMapping("/validateToken")
+    public ResponseEntity<Object> validateToken(@RequestParam String token) {
+        boolean isValid = isValidToken(token);
+
+        if (isValid) {
+            SuccessResponse successResponse = new SuccessResponse("Token is valid.", token);
+            return ResponseEntity.ok(successResponse);
+        } else {
+            ErrorResponse errorResponse = new ErrorResponse("Token does not exist or is invalid.", 400);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    private boolean isValidToken(String token) {
+        // Simulate token validation
+        return "validToken".equals(token);
+    }
+}
+```
+
+In this setup:
+
+- `SuccessResponse` is used to encapsulate details of a successful validation, such as a success message and the token.
+- `ErrorResponse` is used to detail why a request failed, including an error message and code.
+- The controller method `validateToken` decides which response type to return based on the token's validity, utilizing `ResponseEntity<Object>` to allow for different response body types.
+
+This approach provides a clear and structured way to differentiate responses while allowing for flexibility in the information returned to the client.
