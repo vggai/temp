@@ -1,0 +1,21 @@
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
+
+public class ApiService {
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    public void callApi(String url) {
+        try {
+            ResponseEntity<SuccessResponse> response = restTemplate.getForEntity(url, SuccessResponse.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // Handle success
+                SuccessResponse successResponse = response.getBody();
+                // process successResponse
+            }
+        } catch (HttpStatusCodeException e) {
+            String errorPayload = e.getResponseBodyAsString();
+            // Convert errorPayload to ErrorResponse if needed and handle it
+        }
+    }
+}
