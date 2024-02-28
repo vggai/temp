@@ -1,0 +1,79 @@
+When calling an API that may return different response types (success or error) from another API, you can use `RestTemplate` or `WebClient` (for non-blocking, reactive applications) in Spring to make the call and handle the responses accordingly. Below, I'll show you how to use `RestTemplate` for this purpose. This example assumes you have the `SuccessResponse` and `ErrorResponse` classes defined as shown in the previous example.
+
+### Step 1: Set Up `RestTemplate` in Your Application
+
+First, ensure you have a `RestTemplate` bean configured in your Spring application:
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+```
+
+### Step 2: Call the API and Handle Different Responses
+
+You can then inject `RestTemplate` into your service or component to call the API and handle the responses based on the HTTP status code or content of the response:
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class TokenValidationService {
+
+    private final RestTemplate restTemplate;
+
+    @Autowired
+    public TokenValidationService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public void validateToken(String token) {
+        String url = "http://example.com/api/validateToken?token=" + token;
+
+        try {
+            ResponseEntity<SuccessResponse> response = restTemplate.getForEntity(url, SuccessResponse.class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                // Handle success
+                SuccessResponse successResponse = response.getBody();
+                System.out.println("Success: " + successResponse.getMessage());
+            } else {
+                // Handle unexpected response
+                System.out.println("Unexpected response status: " + response.getStatusCode());
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
+                // Handle error
+                ErrorResponse errorResponse = restTemplate.getForObject(url, ErrorResponse.class);
+                System.out.println("Error: " + errorResponse.getErrorMessage());
+            } else {
+                // Handle other HTTP errors
+                System.out.println("HTTP error: " + e.getStatusCode());
+            }
+        } catch (Exception e) {
+            // Handle other errors
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
+```
+
+In this example:
+
+- The `validateToken` method attempts to call the external API using `restTemplate.getForEntity` method, expecting a `SuccessResponse` class if the token is valid.
+- If the token validation API returns a `400 Bad Request`, indicating an invalid token, it's caught in the `HttpClientErrorException` block. Here, you can then handle it accordingly, possibly by logging the error or performing a fallback operation. In this case, it attempts to parse the error response into an `ErrorResponse` object, but you should adjust this logic based on the actual response body's structure.
+- It's important to note that attempting to directly parse the `ErrorResponse` in the catch block may not always be the best approach, especially if the response body structure varies significantly between success and error cases. This example assumes the error details are available in the catch block's scope, which might not always be the case depending on how the API
