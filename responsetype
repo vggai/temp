@@ -1,0 +1,26 @@
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class TokenValidationController {
+
+    @GetMapping("/validateToken")
+    public ResponseEntity<Object> validateToken(@RequestParam String token) {
+        boolean isValid = isValidToken(token);
+
+        if (isValid) {
+            SuccessResponse successResponse = new SuccessResponse("Token is valid.", token);
+            return ResponseEntity.ok(successResponse);
+        } else {
+            ErrorResponse errorResponse = new ErrorResponse("Token does not exist or is invalid.", 400);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    private boolean isValidToken(String token) {
+        // Simulate token validation
+        return "validToken".equals(token);
+    }
+}
