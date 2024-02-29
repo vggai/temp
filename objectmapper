@@ -1,0 +1,35 @@
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class ApiResponseHandler {
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    public ApiResponseHandler(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = new ObjectMapper();
+    }
+
+    public SuccessResponse callApi(String url) throws ApiException {
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            try {
+                return objectMapper.readValue(response.getBody(), SuccessResponse.class);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse success response", e);
+            }
+        } else {
+            try {
+                ErrorResponse errorResponse = objectMapper.readValue(response.getBody(), ErrorResponse.class);
+                throw new ApiException(errorResponse);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse error response", e);
+            }
+        }
+    }
+}
