@@ -1,0 +1,91 @@
+To include both a `userId` (as a `String`) and `accessTime` (as a `long`) in your POST request, you'll first need to update or create a POJO that represents the JSON structure you want to send. Then, you'll use this POJO in your service method to make the call with `RestTemplate`. Here's how you can do it:
+
+### Step 1: Define the POJO
+
+This POJO, let's call it `AccessTokenPayload`, will include fields for `userId`, `accesstoken`, and `accessTime`. It will be serialized into JSON for the request body.
+
+```java
+public class AccessTokenPayload {
+    private String userId;
+    private String accesstoken;
+    private long accessTime;
+
+    // Constructors
+    public AccessTokenPayload(String userId, String accesstoken, long accessTime) {
+        this.userId = userId;
+        this.accesstoken = accesstoken;
+        this.accessTime = accessTime;
+    }
+
+    // Getters and setters
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getAccesstoken() {
+        return accesstoken;
+    }
+
+    public void setAccesstoken(String accesstoken) {
+        this.accesstoken = accesstoken;
+    }
+
+    public long getAccessTime() {
+        return accessTime;
+    }
+
+    public void setAccessTime(long accessTime) {
+        this.accessTime = accessTime;
+    }
+}
+```
+
+### Step 2: Update the Service Method
+
+Modify the service method to use the new `AccessTokenPayload` class, including error handling as previously discussed.
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+public class AccessTokenService {
+
+    private final RestTemplate restTemplate;
+
+    @Autowired
+    public AccessTokenService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public void saveAccessToken(String userId, String accessToken, long accessTime) {
+        String url = "http://example.com/api/saveaccesstoken";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        AccessTokenPayload payload = new AccessTokenPayload(userId, accessToken, accessTime);
+
+        HttpEntity<AccessTokenPayload> entity = new HttpEntity<>(payload, headers);
+
+        try {
+            String response = restTemplate.postForObject(url, entity, String.class);
+            System.out.println("Response: " + response);
+        } catch (Exception e) {
+            // Error handling
+            System.err.println("Error during API call: " + e.getMessage());
+        }
+    }
+}
+```
+
+In this updated service method, `saveAccessToken` now takes three parameters: `userId`, `accessToken`, and `accessTime`. These are used to create an instance of `AccessTokenPayload`, which is then sent in the POST request body as JSON.
+
+This approach ensures that your JSON data is correctly structured and encoded, leveraging Spring's message converters for serialization. It also simplifies handling more complex data structures and makes your code cleaner and easier to maintain.
