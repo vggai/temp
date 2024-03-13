@@ -1,41 +1,33 @@
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerResponse;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 
-public class CustomAuthorizer implements RequestHandler<APIGatewayCustomAuthorizerEvent, APIGatewayCustomAuthorizerResponse> {
-    // Existing Lambda handler code...
+public class LambdaAuthorizerTest {
 
-    public static void main(String[] args) {
-        // Create a test event
-        APIGatewayCustomAuthorizerEvent event = new APIGatewayCustomAuthorizerEvent();
-        event.setAuthorizationToken("secretToken"); // The token you expect
-        event.setMethodArn("arn:aws:execute-api:us-west-2:123456789012:example/prod/POST/{proxy+}"); // Sample ARN
+    @Test
+    public void testAuthorizedRequest() {
+        LambdaAuthorizer authorizer = new LambdaAuthorizer();
+        APIGatewayProxyRequestEvent requestEvent = new APIGatewayProxyRequestEvent();
+        requestEvent.setHeaders(Collections.singletonMap("Authorization", "expectedAuthTokenValue"));
+
+        APIGatewayProxyResponseEvent responseEvent = authorizer.handleRequest(requestEvent, null);
         
-        // Create an instance of your handler
-        CustomAuthorizer handler = new CustomAuthorizer();
-        
-        // Create a mock context (optional)
-        Context context = new MockContext();
-        
-        // Invoke the handler as if it were called by AWS Lambda
-        APIGatewayCustomAuthorizerResponse response = handler.handleRequest(event, context);
-        
-        // Print the response for debugging
-        System.out.println(response);
+        Assertions.assertEquals(200, responseEvent.getStatusCode());
+        Assertions.assertTrue(responseEvent.getBody().contains("\"Effect\":\"Allow\""));
     }
-    
-    private static class MockContext implements Context {
-        // Implement required methods of the Context interface.
-        // These methods can return dummy values since they're primarily used for logging or getting AWS request IDs.
-        @Override
-        public String getAwsRequestId() {
-            return "mock-request-id";
-        }
 
-        // Implement the rest of the Context methods...
+    @Test
+    public void testUnauthorizedRequest() {
+        LambdaAuthorizer authorizer = new LambdaAuthorizer();
+        APIGatewayProxyRequestEvent requestEvent = new APIGatewayProxyRequestEvent();
+        requestEvent.setHeaders(Collections.singletonMap("Authorization", "wrongAuthTokenValue"));
+
+        APIGatewayProxyResponseEvent responseEvent = authorizer.handleRequest(requestEvent, null);
+
+        Assertions.assertEquals(403, responseEvent.getStatusCode());
+        Assertions.assertEquals("Unauthorized", responseEvent.getBody());
     }
 }
