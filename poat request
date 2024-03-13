@@ -1,0 +1,42 @@
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import java.util.Collections;
+
+public class RestTemplateExample {
+
+    public static void main(String[] args) {
+        // Create an instance of RestTemplate
+        RestTemplate restTemplate = new RestTemplate();
+
+        // URL of the API you want to connect to
+        String url = "http://example.com/api/resource";
+
+        // Create a HttpHeaders object to set the headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("Authorization", "Bearer YOUR_ACCESS_TOKEN"); // Replace YOUR_ACCESS_TOKEN as needed
+
+        // Creating the request body
+        String json = """
+                {
+                  "key1": "value1",
+                  "key2": "value2"
+                }
+                """;
+
+        // Wrapping headers and body into an HttpEntity object
+        HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+        // Sending the POST request, including the headers and body. Capture the response in ResponseEntity
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+
+        // Output the response
+        System.out.println("Response Body: " + response.getBody());
+        System.out.println("Status Code: " + response.getStatusCode());
+    }
+}
