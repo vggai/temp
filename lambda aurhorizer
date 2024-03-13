@@ -1,0 +1,54 @@
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerResponse;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class CustomAuthorizer implements RequestHandler<APIGatewayCustomAuthorizerEvent, APIGatewayCustomAuthorizerResponse> {
+
+    @Override
+    public APIGatewayCustomAuthorizerResponse handleRequest(APIGatewayCustomAuthorizerEvent input, Context context) {
+        String token = input.getAuthorizationToken();
+        
+        // Implement your token validation logic here
+        boolean isAuthorized = validateToken(token);
+        
+        String principalId = "user|a1b2c3d4"; // Use a principal ID specific to your application
+        
+        // Policy document
+        Map<String, Object> policyDocument = new HashMap<>();
+        policyDocument.put("Version", "2012-10-17");
+        policyDocument.put("Statement", new Statement[]{
+                new Statement("Allow", "execute-api:Invoke", "*")
+        });
+        
+        // Build and return the response
+        return APIGatewayCustomAuthorizerResponse.builder()
+                .withPrincipalId(principalId)
+                .withPolicyDocument(policyDocument)
+                .withContext(new HashMap<String, String>() {{
+                    put("key", "value"); // You can pass user-specific context here
+                }})
+                .build();
+    }
+
+    private boolean validateToken(String token) {
+        // Here, you should extract and validate the token
+        // This is a stub implementation
+        return "secretToken".equals(token);
+    }
+
+    static class Statement {
+        String Effect;
+        String Action;
+        String Resource;
+
+        public Statement(String effect, String action, String resource) {
+            Effect = effect;
+            Action = action;
+            Resource = resource;
+        }
+    }
+}
