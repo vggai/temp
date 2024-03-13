@@ -1,54 +1,39 @@
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerResponse;
-
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CustomAuthorizer implements RequestHandler<APIGatewayCustomAuthorizerEvent, APIGatewayCustomAuthorizerResponse> {
+public class LambdaAuthorizer implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     @Override
-    public APIGatewayCustomAuthorizerResponse handleRequest(APIGatewayCustomAuthorizerEvent input, Context context) {
-        String token = input.getAuthorizationToken();
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+        APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
+        Map<String, String> headers = request.getHeaders();
         
-        // Implement your token validation logic here
-        boolean isAuthorized = validateToken(token);
-        
-        String principalId = "user|a1b2c3d4"; // Use a principal ID specific to your application
-        
-        // Policy document
-        Map<String, Object> policyDocument = new HashMap<>();
-        policyDocument.put("Version", "2012-10-17");
-        policyDocument.put("Statement", new Statement[]{
-                new Statement("Allow", "execute-api:Invoke", "*")
-        });
-        
-        // Build and return the response
-        return APIGatewayCustomAuthorizerResponse.builder()
-                .withPrincipalId(principalId)
-                .withPolicyDocument(policyDocument)
-                .withContext(new HashMap<String, String>() {{
-                    put("key", "value"); // You can pass user-specific context here
-                }})
-                .build();
-    }
-
-    private boolean validateToken(String token) {
-        // Here, you should extract and validate the token
-        // This is a stub implementation
-        return "secretToken".equals(token);
-    }
-
-    static class Statement {
-        String Effect;
-        String Action;
-        String Resource;
-
-        public Statement(String effect, String action, String resource) {
-            Effect = effect;
-            Action = action;
-            Resource = resource;
+        // Check if the Authorization header is present and has the correct value
+        String expectedAuthToken = "expectedAuthTokenValue";
+        if (headers != null && expectedAuthToken.equals(headers.get("Authorization"))) {
+            // Generate an IAM policy to allow access
+            response.setStatusCode(200);
+            Map<String, Object> authResponse = new HashMap<>();
+            authResponse.put("principalId", "user123"); // Unique identifier for the user
+            Map<String, Object> policyDocument = new HashMap<>();
+            policyDocument.put("Version", "2012-10-17");
+            Map<String, Object> statementOne = new HashMap<>();
+            statementOne.put("Action", "execute-api:Invoke");
+            statementOne.put("Effect", "Allow");
+            statementOne.put("Resource", "arn:aws:execute-api:region:accountId:apiId/stage/METHOD/RESOURCE"); // Specify your API ARN here
+            policyDocument.put("Statement", new Object[] { statementOne });
+            authResponse.put("policyDocument", policyDocument);
+            response.setBody(authResponse.toString());
+        } else {
+            // Deny access
+            response.setStatusCode(403);
+            response.setBody("Unauthorized");
         }
+        
+        return response;
     }
 }
