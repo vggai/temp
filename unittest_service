@@ -1,0 +1,72 @@
+To achieve 100% coverage for the UserService class, you will need to write unit tests that cover all possible execution paths, including successful updates and handling of exceptions. Below is an example of how you could write these tests using JUnit 5 and Mockito.First, ensure you have the necessary dependencies for testing in your pom.xml or build.gradle file. Here, I'll assume you're using Maven:<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <version>YourSpringBootVersion</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-junit-jupiter</artifactId>
+    <version>YourMockitoVersion</version>
+    <scope>test</scope>
+</dependency>
+UserServiceTest ClassThis test class will cover all scenarios including successful token update, user not found, and token already exists.import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.UserService;
+import com.example.demo.service.UserService.TokenExistsException;
+import com.example.demo.service.UserService.UserNotFoundException;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.Optional;
+
+@ExtendWith(MockitoExtension.class)
+public class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private UserService userService;
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = new User();
+        user.setId("1");
+        user.setAccessToken("access123");
+        user.setFcmTokens(new ArrayList<>());
+    }
+
+    @Test
+    void updateFcmTokenSuccess() throws UserNotFoundException, TokenExistsException {
+        when(userRepository.findByAccessToken("access123")).thenReturn(Optional.of(user));
+        userService.updateFcmToken("access123", "token123");
+        assertTrue(user.getFcmTokens().contains("token123"));
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    void updateFcmTokenUserNotFound() {
+        when(userRepository.findByAccessToken("invalid")).thenReturn(Optional.empty());
+        assertThrows(UserNotFoundException.class, () -> userService.updateFcmToken("invalid", "token123"));
+    }
+
+    @Test
+    void updateFcmTokenExistsException() {
+        user.getFcmTokens().add("token123");
+        when(userRepository.findByAccessToken("access123")).thenReturn(Optional.of(user));
+        assertThrows(TokenExistsException.class, () -> userService.updateFcmToken("access123", "token123"));
+    }
+}
+Explanation:@ExtendWith(MockitoExtension.class): This annotation integrates Mockito into the JUnit 5 testing framework, enabling mocks and injections.@Mock UserRepository: Mocks the UserRepository to simulate interactions with the database.@InjectMocks UserService: Injects the mocked UserRepository into an instance of UserService, which is the class under test.setUp() Method: Initializes common objects before each test. Here, it creates a user with an empty list of FCM tokens.updateFcmTokenSuccess(): Tests that a new token is successfully added when the user is found, and the save method is called exactly once.updateFcmTokenUserNotFound(): Tests that UserNotFoundException is thrown when no user matches the provided access token.updateFcmTokenExistsException(): Tests that TokenExistsException is thrown when the provided FCM token already exists in the user's list of tokens.This setup ensures you have tests covering all branches of your service method, aiming for 100% coverage. Remember to adjust the test methods according to your specific business logic and class structures.
