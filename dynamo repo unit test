@@ -1,0 +1,73 @@
+Unit testing a repository that interacts with an external service like DynamoDB involves mocking the interactions to ensure your tests are isolated and repeatable. For Spring Data repositories, you can use tools like Mockito along with the Spring Boot testing support to mock the DynamoDB interactions.Let's write some unit tests for the UserRepository interface methods findById and findByAccessToken. We will assume you have a test framework like JUnit 5 and Mockito available in your project.First, ensure your test dependencies are included in your pom.xml or build.gradle file:Maven (pom.xml)<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-core</artifactId>
+    <scope>test</scope>
+</dependency>
+Gradle (build.gradle)testImplementation 'org.springframework.boot:spring-boot-starter-test'
+testImplementation 'org.mockito:mockito-core'
+Example Unit Testspackage com.example.demo.repository;
+
+import com.example.demo.model.User;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.repository.CrudRepository;
+import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class UserRepositoryTests {
+
+    @Mock
+    private CrudRepository<User, String> crudRepository; // Mock the CrudRepository
+
+    @InjectMocks
+    private UserRepository userRepository; // The repository to test
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        // Set up a sample user for testing
+        user = new User();
+        user.setId("123");
+        user.setAccessToken("token_abc123");
+    }
+
+    @Test
+    void whenFindById_thenReturnUser() {
+        // Mock the findById method
+        when(crudRepository.findById("123")).thenReturn(Optional.of(user));
+
+        // Call the method under test
+        Optional<User> found = userRepository.findById("123");
+
+        // Validate the results
+        assertThat(found.isPresent()).isTrue();
+        assertThat(found.get().getId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    void whenFindByAccessToken_thenReturnUser() {
+        // Mock the findByAccessToken method
+        // Note: This is a simplification. In reality, you'd need to mock the DynamoDB interactions.
+        when(userRepository.findByAccessToken("token_abc123")).thenReturn(Optional.of(user));
+
+        // Call the method under test
+        Optional<User> found = userRepository.findByAccessToken("token_abc123");
+
+        // Validate the results
+        assertThat(found.isPresent()).isTrue();
+        assertThat(found.get().getAccessToken()).isEqualTo(user.getAccessToken());
+    }
+}
+Key Points:@ExtendWith(MockitoExtension.class): This annotation integrates Mockito with JUnit 5, allowing Mockito annotations like @Mock and @InjectMocks to be used.@Mock: This creates a mock instance of the CrudRepository. It's used to define expectations and return values for its methods.@InjectMocks: This creates an instance of UserRepository and injects the mock CrudRepository into it.setUp(): A method annotated with @BeforeEach runs before each test, setting up common test objects.Test Methods: Each @Test annotated method is a unit test. They mock the behavior of the findById and findByAccessToken methods, then
