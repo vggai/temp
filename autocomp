@@ -1,0 +1,64 @@
+import React from 'react';
+import { TextField } from '@mui/material';
+import { useAutocomplete } from '@mui/base/AutocompleteUnstyled';
+import { FixedSizeList as List } from 'react-window';
+
+function VirtualizedList({ options, getOptionLabel, renderOption, highlightedIndex }) {
+  return (
+    <List
+      height={400}
+      width={300}
+      itemSize={35}
+      itemCount={options.length}
+      itemData={{ options, getOptionLabel, renderOption, highlightedIndex }}
+    >
+      {({ index, style, data }) => {
+        const { options, getOptionLabel, renderOption, highlightedIndex } = data;
+        const option = options[index];
+        const label = getOptionLabel(option);
+        return renderOption({ option, style, state: { highlighted: highlightedIndex === index } }, label);
+      }}
+    </List>
+  );
+}
+
+function App() {
+  const {
+    getRootProps,
+    getInputProps,
+    getListboxProps,
+    getOptionProps,
+    groupedOptions,
+    inputValue,
+    highlightedIndex,
+  } = useAutocomplete({
+    id: 'virtualize-autocomplete',
+    options: bigData,
+    getOptionLabel: (option) => option.label,
+  });
+
+  return (
+    <div {...getRootProps()}>
+      <TextField {...getInputProps()} label="Select an item" variant="outlined" />
+      {groupedOptions.length > 0 ? (
+        <VirtualizedList
+          options={groupedOptions}
+          getOptionLabel={(option) => option.label}
+          highlightedIndex={highlightedIndex}
+          renderOption={(props, label) => (
+            <div {...props} style={{ ...props.style, backgroundColor: props.state.highlighted ? '#bde4ff' : undefined }}>
+              {label}
+            </div>
+          )}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+// Example data
+const bigData = Array.from(new Array(10000)).map((_, index) => ({
+  label: `Item ${index}`,
+}));
+
+export default App;
