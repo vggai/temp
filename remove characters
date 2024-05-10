@@ -1,0 +1,11 @@
+public class RemoveSpecialCharacters {
+    public static void main(String[] args) {
+        String originalString = "Example String with \"quotes\", backslashes \\, slashes /, and other special characters: \n \t !@#";
+
+        // Removing specific special characters
+        String cleanedString = originalString.replaceAll("[\"\\\\/\\n\\t]", "");
+
+        System.out.println("Original: " + originalString);
+        System.out.println("Cleaned: " + cleanedString);
+    }
+}
