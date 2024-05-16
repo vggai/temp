@@ -1,0 +1,59 @@
+import React, { useState, useEffect, useRef } from 'react';
+import ReactPlayer from 'react-player';
+import axios from 'axios';
+
+const VideoPlayerWithOverlay = () => {
+  const [videoData, setVideoData] = useState([]);
+  const [currentTimestamp, setCurrentTimestamp] = useState(0);
+  const [currentObjects, setCurrentObjects] = useState([]);
+  const playerRef = useRef(null);
+
+  // Fetch the JSON data
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get('URL_TO_YOUR_JSON_FILE');
+      setVideoData(response.data);
+    };
+
+    fetchData();
+  }, []);
+
+  // Update current objects based on the timestamp and sort by confidence
+  useEffect(() => {
+    const objectsAtTimestamp = videoData.filter(
+      item => Math.floor(item.Timestamp / 1000) === Math.floor(currentTimestamp)
+    );
+    objectsAtTimestamp.sort((a, b) => b.Confidence - a.Confidence);
+    setCurrentObjects(objectsAtTimestamp);
+  }, [currentTimestamp, videoData]);
+
+  const handleProgress = state => {
+    setCurrentTimestamp(state.playedSeconds);
+  };
+
+  return (
+    <div style={{ position: 'relative', width: '800px', height: '450px' }}>
+      <ReactPlayer
+        ref={playerRef}
+        url="URL_TO_YOUR_VIDEO_FILE"
+        controls
+        playing
+        onProgress={handleProgress}
+        width="100%"
+        height="100%"
+      />
+      <div style={{ position: 'absolute', top: '10px', right: '10px', color: 'white', backgroundColor: 'rgba(0, 0, 0, 0.5)', padding: '10px', borderRadius: '8px' }}>
+        {currentObjects.map((item, index) => (
+          <div key={index}>
+            {item.Object} (
+            <span style={{ color: item.Confidence > 80 ? 'green' : 'red' }}>
+              {item.Confidence.toFixed(2)}%
+            </span>)
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default VideoPlayerWithOverlay;
