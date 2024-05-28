@@ -1,0 +1,49 @@
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest.BodyPublishers;
+import org.json.JSONObject;
+
+public class HttpClientPostExample {
+
+    public static void main(String[] args) {
+        try {
+            // Step 1: Create an HttpClient
+            HttpClient client = HttpClient.newHttpClient();
+
+            // Step 2: Create a JSON object for the request body
+            JSONObject jsonBody = new JSONObject();
+            jsonBody.put("key1", "value1");
+            jsonBody.put("key2", "value2");
+
+            // Step 3: Create a HttpRequest
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(new URI("https://api.example.com/endpoint"))
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "Bearer your_token_here")
+                    .POST(BodyPublishers.ofString(jsonBody.toString()))
+                    .build();
+
+            // Step 4: Send the request and get the response
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            // Step 5: Check the response code
+            if (response.statusCode() == 200 || response.statusCode() == 201) { // success
+                // Get the JSON response body
+                String jsonResponse = response.body();
+
+                // Parse JSON response using org.json
+                JSONObject jsonObject = new JSONObject(jsonResponse);
+
+                // Print the JSON response
+                System.out.println("JSON Response: " + jsonObject.toString(2)); // Pretty print with an indent of 2
+            } else {
+                System.out.println("POST request failed with response code: " + response.statusCode());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
