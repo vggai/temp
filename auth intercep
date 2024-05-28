@@ -1,0 +1,135 @@
+Sure! Below is an example of an `AuthInterceptor` class in a Spring Boot application. This interceptor will intercept incoming requests, extract the `accessToken` from the header, make a POST request to an authentication endpoint, and store the `vID` in the request attributes if the authentication is successful.
+
+First, you need to add the necessary dependencies to your `pom.xml` if they are not already included:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+Next, create the `AuthInterceptor` class:
+
+```java
+package com.example.interceptor;
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+
+import org.json.JSONObject;
+
+@Component
+public class AuthInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
+        String accessToken = request.getHeader("accessToken");
+        if (accessToken == null || accessToken.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
+
+        // Call the authentication API
+        URL url = new URL("https://example.com/authenticate");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("accessToken", accessToken);
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            Scanner scanner = new Scanner(conn.getInputStream());
+            String responseBody = scanner.useDelimiter("\\A").next();
+            scanner.close();
+
+            JSONObject jsonResponse = new JSONObject(responseBody);
+            String vID = jsonResponse.getString("vID");
+
+            request.setAttribute("vID", vID);
+            return true;
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return false;
+        }
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        // Post handle logic
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        // After completion logic
+    }
+}
+```
+
+Then, you need to register the interceptor in your Spring configuration. Create a configuration class:
+
+```java
+package com.example.config;
+
+import com.example.interceptor.AuthInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private AuthInterceptor authInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor).addPathPatterns("/**");
+    }
+}
+```
+
+Finally, you can access the `vID` attribute in your controller:
+
+```java
+package com.example.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api")
+public class ExampleController {
+
+    @GetMapping("/data")
+    public String getData(@RequestAttribute("vID") String vID) {
+        // Use vID in your business logic
+        return "Authenticated with vID: " + vID;
+    }
+}
+```
+
+This setup will intercept incoming requests, check the `accessToken`, call the authentication API, and store the `vID` in the request attributes if authentication is successful. The `vID` can then be accessed in your controllers.
