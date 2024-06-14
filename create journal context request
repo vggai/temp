@@ -1,0 +1,32 @@
+package com.magellan.journalapi.model;
+
+import java.util.List;
+import lombok.Data;
+
+@Data
+public class CreateAIJournalContextsRequest {
+
+    private String vid;
+    private String tripName;
+    private List<Coordinate> route;
+    private String weather;
+    private int steps;
+    private int calories;
+    private float deviceLatitude;
+    private float deviceLongitude;
+    private String deviceAddress;
+    private long deviceTimeStamp;
+    private List<String> s3ImageUrls;
+
+    @Data
+    public static class Coordinate {
+        private float latitude;
+        private float longitude;
+        private long epochTime;
+        private long start_time;
+        private long end_time;
+        private long timeStampStart;
+        private long timeStampEnd;
+        private String address;
+    }
+}
