@@ -1,0 +1,26 @@
+import json
+
+# List of titles
+titles = [
+    "Introduction to JSON",
+    "Advanced JavaScript Techniques",
+    "Building RESTful APIs",
+    "Understanding Asynchronous Programming",
+    "Mastering React Components",
+    "Effective State Management in Flutter",
+    "Exploring AWS Services",
+    "Database Design Best Practices",
+    "Optimizing Web Performance",
+    "Introduction to Machine Learning"
+]
+
+# Create a dictionary with the titles array
+response = {
+    "titles": titles
+}
+
+# Convert the dictionary to a JSON string
+json_response = json.dumps(response, indent=4)
+
+# Print the JSON string
+print(json_response)
