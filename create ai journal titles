@@ -1,0 +1,17 @@
+@Data
+public class CreateAIJournalTitlesRequest {
+
+    private String vid;
+    private String title;
+    private List<String> titleList;
+    private List<String> promptContextsList;
+    private String tripName;
+    private List<Coordinate> route;
+    private String weather;
+    private int steps;
+    private int calories;
+    private float deviceLatitude;
+    private float deviceLongitude;
+    private String deviceAddress;
+    private long deviceTimeStamp;
+    private List<String> s3ImageUrls;
