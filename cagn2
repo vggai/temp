@@ -1,0 +1,43 @@
+### Slide Title: Dynamic Badge Color and Level Update Using Skill Scores and CGAN
+
+**Introduction**:
+- This patent idea revolves around dynamically updating user badges based on their skill scores derived from conversations.
+- If a skill score change is not sufficient to cross a level, the badge's most prominent feature's color is altered.
+- If the score crosses a level threshold, a new badge is assigned, and a base color is generated using Conditional Generative Adversarial Networks (CGAN).
+
+**Skill Score Update**:
+- The updated skill score for two users in conversation is calculated as:
+  \( S' = S + w_s \cdot dQ \)
+  - \( S' \): Updated skill score
+  - \( S \): Current skill score
+  - \( w_s \): Learnable parameter
+  - \( dQ \): Change in skill score during conversation
+
+**Badge Update Logic**:
+- **Minor Score Changes**:
+  - If the change in skill score is minor and doesn't cross a level, only the color of the badge's most prominent feature is altered.
+- **Level Threshold Crossing**:
+  - If the skill score crosses a level threshold, a new badge is assigned.
+  - A base color for the new badge is generated using CGAN.
+
+**Prominent Feature Detection**:
+- Detect the most prominent feature of the badge to apply color changes.
+- Example: In a camera icon badge, the ring around the lens could be considered the most prominent feature.
+
+**CGAN Integration**:
+- Conditional Generative Adversarial Networks (CGAN) are used to generate new colors for the most prominent feature of the badge.
+- CGAN ensures the generated colors are distinct and visually appealing.
+
+**Flow Chart Diagram**:
+- **Conversation Analysis**:
+  - Monitor user conversations and extract skill scores.
+- **Score Update**:
+  - Calculate the updated skill score \( S' = S + w_s \cdot dQ \).
+- **Determine Badge Update**:
+  - Check if the updated score crosses a level threshold.
+- **Prominent Feature Detection**:
+  - Identify the most prominent feature of the badge.
+- **Color Generation using CGAN**:
+  - Use CGAN to generate a new color for the prominent feature.
+- **Badge Update**:
+  - Apply the new color to the prominent feature or assign a new badge if the level threshold is crossed.
