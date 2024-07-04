@@ -1,0 +1,16 @@
+ public void updateAdID(String vID, String adID) {
+        Optional<UserAdSession> existingSessionOptional = repository.findByAdID(adID);
+
+        if (existingSessionOptional.isPresent()) {
+            UserAdSession existingSession = existingSessionOptional.get();
+            if (existingSession.getVID().equals(vID)) {
+                throw new AdSessionAlreadyExistsException("Ad session already exists for this vID and adID");
+            } else {
+                existingSession.setVID(vID);
+                repository.save(existingSession);
+            }
+        } else {
+            UserAdSession newSession = new UserAdSession(adID, vID);
+            repository.save(newSession);
+        }
+    }
