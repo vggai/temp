@@ -1,0 +1,13 @@
+public Optional<String> getRandomAPIKey(String providerName) {
+        Optional<APICreds> apiCredsOptional = apiCredRepository.findByProviderName(providerName);
+
+        if (apiCredsOptional.isPresent()) {
+            APICreds apiCreds = apiCredsOptional.get();
+            List<String> apiKeys = apiCreds.getApiKey();
+            if (!apiKeys.isEmpty()) {
+                int randomIndex = random.nextInt(apiKeys.size());
+                return Optional.of(apiKeys.get(randomIndex));
+            }
+        }
+        return Optional.empty();
+    }
