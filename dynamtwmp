@@ -1,0 +1,68 @@
+package com.example.dynamodb.entity;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBHashKey;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBRangeKey;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBTable;
+
+@DynamoDBTable(tableName = "YourTableName")
+public class YourEntity {
+
+    @Id
+    private YourEntityId id;
+    private String someAttribute;
+
+    @PersistenceConstructor
+    public YourEntity(YourEntityId id, String someAttribute) {
+        this.id = id;
+        this.someAttribute = someAttribute;
+    }
+
+    public YourEntityId getId() {
+        return id;
+    }
+
+    public void setId(YourEntityId id) {
+        this.id = id;
+    }
+
+    public String getSomeAttribute() {
+        return someAttribute;
+    }
+
+    public void setSomeAttribute(String someAttribute) {
+        this.someAttribute = someAttribute;
+    }
+
+    public static class YourEntityId {
+        private String partitionKey;
+        private String sortKey;
+
+        public YourEntityId() {
+        }
+
+        public YourEntityId(String partitionKey, String sortKey) {
+            this.partitionKey = partitionKey;
+            this.sortKey = sortKey;
+        }
+
+        @DynamoDBHashKey(attributeName = "PartitionKey")
+        public String getPartitionKey() {
+            return partitionKey;
+        }
+
+        public void setPartitionKey(String partitionKey) {
+            this.partitionKey = partitionKey;
+        }
+
+        @DynamoDBRangeKey(attributeName = "SortKey")
+        public String getSortKey() {
+            return sortKey;
+        }
+
+        public void setSortKey(String sortKey) {
+            this.sortKey = sortKey;
+        }
+    }
+}
