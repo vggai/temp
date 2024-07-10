@@ -1,0 +1,53 @@
+package com.example.dynamodb.entity;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBHashKey;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBRangeKey;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBTable;
+import org.springframework.data.dynamodb.core.mapping.DynamoDBAttribute;
+
+@Data
+@NoArgsConstructor
+@DynamoDBTable(tableName = "YourTableName")
+public class YourEntity {
+
+    @Id
+    private YourEntityId id;
+    private String someAttribute;
+
+    @PersistenceConstructor
+    public YourEntity(YourEntityId id, String someAttribute) {
+        this.id = id;
+        this.someAttribute = someAttribute;
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class YourEntityId {
+        private String partitionKey;
+        private String sortKey;
+
+        public YourEntityId(String partitionKey, String sortKey) {
+            this.partitionKey = partitionKey;
+            this.sortKey = sortKey;
+        }
+
+        @DynamoDBHashKey(attributeName = "PartitionKey")
+        public String getPartitionKey() {
+            return partitionKey;
+        }
+
+        @DynamoDBRangeKey(attributeName = "SortKey")
+        public String getSortKey() {
+            return sortKey;
+        }
+    }
+
+    @DynamoDBAttribute(attributeName = "SomeAttribute")
+    public String getSomeAttribute() {
+        return someAttribute;
+    }
+}
